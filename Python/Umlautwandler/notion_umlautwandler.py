@@ -1,6 +1,7 @@
 from notion_client import Client
 from datetime import datetime
 import re
+
 class Notion_Umlautwandler:
 
 # Initialize a client object with your API key
