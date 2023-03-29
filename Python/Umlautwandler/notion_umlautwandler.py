@@ -1,14 +1,20 @@
+import os
 from notion_client import Client
 from datetime import datetime
 import re
 
 class Notion_Umlautwandler:
 
+    notion = Client(auth=os.environ["NOTION_API_KEY"])
+
 # Initialize a client object with your API key
     client = Client(auth="<your_api_key>")
 
 # Specify the ID of your database
     database_id = "<your_database_id>"
+
+# Specify the search query
+    query = "INSERT_SEARCH_QUERY_HERE"    
 
 # Get a reference to the database
     database = client.databases.retrieve(database_id)
@@ -61,4 +67,21 @@ class Notion_Umlautwandler:
         for umlaute in umlaute:
             if  umlaute in word:
                 words_to_replace += [word, replace(word)]
+    
+    finds = notion.databases.query(
+        **{
+            "databases_id": database_id,
+            "filter": {
+                "contains": query
+            }
+        }
+    ).get("finds", [])
+
+    for find in finds:
+        name = find.get("properties", {}).get("Name", {}).get("title", [{}])[0].get("plain_text", "")
+
+        new_name = name.replace("TARGET_WORD", "REPLACEMENT_WORD")
+
+        notion.pages.update(find["id"], properties={"Name": {"title": [{"text": {"content": new_name}}]}})
+
     
