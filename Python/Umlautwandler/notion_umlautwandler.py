@@ -1,3 +1,5 @@
+import json, requests
+
 import os
 from notion_client import Client
 from datetime import datetime
@@ -5,13 +7,45 @@ import re
 
 class Notion_Umlautwandler:
 
-    notion = Client(auth=os.environ["NOTION_API_KEY"])
+    file = open('Scret.json')
+
+    data = json.load(file)
+    
+    notion = Client(auth=os.environ[data['database_id']])
 
 # Initialize a client object with your API key
-    client = Client(auth="<your_api_key>")
+    client = Client(auth=data['notion_api_key'])
 
 # Specify the ID of your database
-    database_id = "<your_database_id>"
+    database_id = data['database_id']
+
+    file.close()
+
+    url = 'https://api.notion.com/v1/pages'
+
+    headers = {
+        'Authorization': f'Bearer {database_id}',
+        'Content-Type': 'application/json',
+        'Notion-version': '2021-08-16'
+    }
+
+    data_input = {
+        "parent": { "database_id": f"{database_id}" },
+    "properties": {
+      "title": {
+        "title": [
+          {
+            "text": {
+              "content": "Yurts in Big Sur, California"
+            }
+          }
+        ]
+      }
+    }
+    }
+
+    response = requests.post(url, headers=headers, json= data_input)
+ 
 
 # Specify the search query
     query = "INSERT_SEARCH_QUERY_HERE"    
@@ -75,7 +109,7 @@ class Notion_Umlautwandler:
                 "contains": query
             }
         }
-    ).get("finds", [])
+    ).get("finds", []) # type: ignore
 
     for find in finds:
         name = find.get("properties", {}).get("Name", {}).get("title", [{}])[0].get("plain_text", "")
